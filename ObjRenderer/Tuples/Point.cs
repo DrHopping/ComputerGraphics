@@ -7,7 +7,7 @@ namespace ObjRenderer.Tuples
     {
         public static Point Origin => new Point(0, 0, 0);
 
-        public Point(double x, double y, double z) : base(x, y, z, 1) { }
+        public Point(float x, float y, float z) : base(x, y, z, 1) { }
 
         public Point Add(Vector v)
         {
