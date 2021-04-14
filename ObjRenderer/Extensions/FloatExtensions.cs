@@ -11,5 +11,9 @@ namespace ObjRenderer.Extensions
             return Math.Abs(a - b) < Epsilon;
         }
 
+        public static byte To255Byte(this float value)
+        {
+            return (byte)MathF.Round((255 * Math.Clamp(value, 0, 1)));
+        }
     }
 }

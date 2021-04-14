@@ -8,7 +8,7 @@ namespace ObjRenderer.Intersections
         public float U { get; }
         public float V { get; }
 
-        public IntersectionWithUV(float t, Shape @object, float u, float v) : base(t, @object)
+        public IntersectionWithUV(float t, Shape @object, float u, float v, Point p) : base(t, @object, p)
         {
             U = u;
             V = v;

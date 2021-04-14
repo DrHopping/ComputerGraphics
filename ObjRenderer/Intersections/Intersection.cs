@@ -11,11 +11,13 @@ namespace ObjRenderer.Intersections
     {
         public float T { get; }
         public Shape Object { get; }
+        public Point P { get; }
 
-        public Intersection(float t, Shape @object)
+        public Intersection(float t, Shape @object, Point p)
         {
             T = t;
             Object = @object;
+            P = p;
         }
 
 

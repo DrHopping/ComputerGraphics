@@ -59,7 +59,7 @@ namespace ObjRenderer.Shapes
 
             var t = f * E2 * originCrossE1;
 
-            return new IntersectionCollection(new IntersectionWithUV(t, this, u, v));
+            return new IntersectionCollection(new IntersectionWithUV(t, this, u, v, ray.Position(t)));
         }
 
         public override Vector LocalNormalAt(Point point, IntersectionWithUV hit = null)
