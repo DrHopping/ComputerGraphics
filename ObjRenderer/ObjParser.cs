@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
+using ObjRenderer.Interfaces;
 using ObjRenderer.Shapes;
-using ObjRenderer.Tuples;
 
 namespace ObjRenderer
 {
@@ -13,25 +14,25 @@ namespace ObjRenderer
         private static readonly NumberFormatInfo numberFormat = CultureInfo.GetCultureInfo("en-US").NumberFormat;
 
         public int IgnoredLineCount { get; }
-        public ReadOnlyCollection<Point> Vertices { get; }
+        public ReadOnlyCollection<Vector3> Vertices { get; }
         public Group DefaultGroup { get; }
         public ReadOnlyDictionary<string, Group> Groups { get; }
-        public ReadOnlyCollection<Vector> Normals { get; set; }
+        public ReadOnlyCollection<Vector3> Normals { get; set; }
 
-        public Point Minimum { get; private set; }
-        public Point Maximum { get; private set; }
-        public Point Middle { get; set; }
+        public Vector3 Minimum { get; private set; }
+        public Vector3 Maximum { get; private set; }
+        public Vector3 Middle { get; set; }
 
 
         public ObjParser(string objData) : this(objData.Split(Environment.NewLine)) { }
 
         public ObjParser(IEnumerable<string> objLines)
         {
-            var vertices = new List<Point>();
+            var vertices = new List<Vector3>();
             var defaultGroup = new Group();
             var currentGroup = defaultGroup;
             var groups = new Dictionary<string, Group>();
-            var normals = new List<Vector>();
+            var normals = new List<Vector3>();
 
             var ignoredLineCount = 0;
 
@@ -71,7 +72,7 @@ namespace ObjRenderer
             (Minimum, Maximum, Middle) = GetBounds(vertices);
         }
 
-        private void ParseVertex(List<Point> vertices, string[] lineSplit, ref int ignoredLineCount)
+        private void ParseVertex(List<Vector3> vertices, string[] lineSplit, ref int ignoredLineCount)
         {
             if (lineSplit.Length == 4)
             {
@@ -85,7 +86,7 @@ namespace ObjRenderer
 
                 if (valid)
                 {
-                    var vertex = new Point(x, y, z);
+                    var vertex = new Vector3(x, y, z);
                     vertices.Add(vertex);
 
                     return;
@@ -95,7 +96,7 @@ namespace ObjRenderer
             ignoredLineCount++;
         }
 
-        private void ParseFace(List<Point> vertices, List<Vector> normals, Group triangles, string[] lineSplit, ref int ignoredLineCount)
+        private void ParseFace(List<Vector3> vertices, List<Vector3> normals, Group triangles, string[] lineSplit, ref int ignoredLineCount)
         {
             bool isValid = false;
 
@@ -112,14 +113,15 @@ namespace ObjRenderer
                         var (vertex2, normal2) = GetVertextInfo(lineSplit[i], vertices, normals);
                         var (vertex3, normal3) = GetVertextInfo(lineSplit[i + 1], vertices, normals);
 
-                        if (vertex2 == null & vertex3 == null)
+                        if (vertex2 == default & vertex3 == default)
                         {
                             isValid = false;
                             break;
                         }
-                        var triangle = hasNormal1 && normal2 is { } && normal3 is { }
-                            ? new SmoothTriangle(vertex1, vertex2, vertex3, normal1, normal2, normal3)
-                            : new Triangle(vertex1, vertex2, vertex3);
+                        ITraceable triangle = //hasNormal1 && normal2 is { } && normal3 is { }
+                            //? (ITraceable) new SmoothTriangle(vertex1, vertex2, vertex3, normal1, normal2, normal3)
+                            //:
+                        new Triangle(vertex1, vertex2, vertex3);
                         triangles.AddChild(triangle);
                     }
                 }
@@ -131,10 +133,10 @@ namespace ObjRenderer
             }
         }
 
-        private (Point vertex, Vector normal) GetVertextInfo(string text, List<Point> vertices, List<Vector> normals)
+        private (Vector3 vertex, Vector3 normal) GetVertextInfo(string text, List<Vector3> vertices, List<Vector3> normals)
         {
-            Point vertex = null;
-            Vector normal = null;
+            Vector3 vertex = default;
+            Vector3 normal = default;
 
             var vertexInfo = text.Split('/');
             if ((vertexInfo.Length >= 1) &&
@@ -157,7 +159,7 @@ namespace ObjRenderer
         public Group ToGroup()
         {
             var group = new Group(DefaultGroup);
-            group.AddChildren(Groups.Values);
+            group.AddChildren(Groups.Values.SelectMany(g => g.Shapes));
 
             return group;
         }
@@ -174,7 +176,7 @@ namespace ObjRenderer
             ignoredLineCount++;
         }
 
-        private void ParseNormal(List<Vector> normals, string[] lineSplit, ref int ignoredLineCount)
+        private void ParseNormal(List<Vector3> normals, string[] lineSplit, ref int ignoredLineCount)
         {
             if (lineSplit.Length == 4)
             {
@@ -190,7 +192,7 @@ namespace ObjRenderer
 
                 if (valid)
                 {
-                    var normal = new Vector(x, y, z);
+                    var normal = new Vector3(x, y, z);
                     normals.Add(normal);
 
                     return;
@@ -200,11 +202,11 @@ namespace ObjRenderer
             ignoredLineCount++;
         }
 
-        private (Point minimum, Point maximum, Point middle) GetBounds(List<Point> vertices)
+        private (Vector3 minimum, Vector3 maximum, Vector3 middle) GetBounds(List<Vector3> vertices)
         {
             if (!vertices.Any())
             {
-                return (null, null, null);
+                return (default, default, default);
             }
 
             var minimumX = vertices.First().X;
@@ -244,10 +246,10 @@ namespace ObjRenderer
                 }
             }
 
-            var minimum = new Point(minimumX, minimumY, minimumZ);
-            var maximum = new Point(maximumX, maximumY, maximumZ);
+            var minimum = new Vector3(minimumX, minimumY, minimumZ);
+            var maximum = new Vector3(maximumX, maximumY, maximumZ);
 
-            var middle = new Point((minimumX + maximumX) / 2, (minimumY + maximumY) / 2, (minimumZ + maximumZ) / 2);
+            var middle = new Vector3((minimumX + maximumX) / 2, (minimumY + maximumY) / 2, (minimumZ + maximumZ) / 2);
 
             return (minimum, maximum, middle);
         }

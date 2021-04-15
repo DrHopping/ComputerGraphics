@@ -1,30 +1,22 @@
-﻿using ObjRenderer.Matrices;
-using ObjRenderer.Tuples;
+﻿using System.Numerics;
+using ObjRenderer.Matrices;
 
 namespace ObjRenderer.Models
 {
     public class Ray
     {
-        public Point Origin { get; }
-        public Vector Direction { get; }
+        public Vector3 Origin { get; }
+        public Vector3 Direction { get; }
 
-        public Ray(Point origin, Vector direction)
+        public Ray(Vector3 origin, Vector3 direction)
         {
             Origin = origin;
             Direction = direction;
         }
 
-        public Point Position(float t)
+        public Vector3 Position(float t)
         {
             return Origin + Direction * t;
-        }
-
-        public Ray Transform(Matrix transform)
-        {
-            var origin = (Point)(transform * Origin);
-            var direction = (Vector)(transform * Direction);
-
-            return new Ray(origin, direction);
         }
     }
 }

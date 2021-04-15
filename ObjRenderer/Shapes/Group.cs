@@ -2,32 +2,32 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using ObjRenderer.Interfaces;
 using ObjRenderer.Intersections;
 using ObjRenderer.Models;
-using ObjRenderer.Tuples;
 
 namespace ObjRenderer.Shapes
 {
-    public class Group : Shape, IEnumerable<Shape>
+    public class Group : IEnumerable<ITraceable>
     {
-        private List<Shape> _shapes;
+        public List<ITraceable> Shapes { get; }
 
-        public Group(IEnumerable<Shape> shapes) : this()
+        public Group(IEnumerable<ITraceable> shapes) : this()
         {
             AddChildren(shapes);
         }
 
         public Group()
         {
-            _shapes = new List<Shape>();
+            Shapes = new List<ITraceable>();
         }
 
-        public void AddChild(Shape shape)
+        public void AddChild(ITraceable shape)
         {
-            _shapes.Add(shape);
+            Shapes.Add(shape);
         }
 
-        public void AddChildren(IEnumerable<Shape> shapes)
+        public void AddChildren(IEnumerable<ITraceable> shapes)
         {
             foreach (var shape in shapes)
             {
@@ -35,23 +35,11 @@ namespace ObjRenderer.Shapes
             }
         }
 
-        public override IntersectionCollection LocalIntersect(Ray ray)
+        public ITraceable this[int i] => Shapes[i];
+
+        public IEnumerator<ITraceable> GetEnumerator()
         {
-            var intersects = _shapes.SelectMany(shape => shape.Intersect(ray)).ToArray();
-
-            return new IntersectionCollection(intersects);
-        }
-
-        public override Vector LocalNormalAt(Point point, IntersectionWithUV hit = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Shape this[int i] => _shapes[i];
-
-        public IEnumerator<Shape> GetEnumerator()
-        {
-            return _shapes.GetEnumerator();
+            return Shapes.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -59,5 +47,9 @@ namespace ObjRenderer.Shapes
             return GetEnumerator();
         }
 
+        public Mesh ToMesh()
+        {
+            return new Mesh(Shapes.Select(s => (Triangle)s));
+        }
     }
 }

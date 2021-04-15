@@ -1,23 +1,31 @@
 ﻿using System;
+using System.Numerics;
+using ObjRenderer.Interfaces;
 using ObjRenderer.Intersections;
-using ObjRenderer.Tuples;
+using ObjRenderer.Models;
 
 namespace ObjRenderer.Shapes
 {
-    public class SmoothTriangle : Triangle
+    public class SmoothTriangle : ITraceable, ITransformable
     {
-        public Vector N1 { get; }
-        public Vector N2 { get; }
-        public Vector N3 { get; }
+        public Vector3 P1 { get; private set; }
+        public Vector3 P2 { get; private set; }
+        public Vector3 P3 { get; private set; }
+        public Vector3 N1 { get; }
+        public Vector3 N2 { get; }
+        public Vector3 N3 { get; }
 
-        public SmoothTriangle(Point p1, Point p2, Point p3, Vector n1, Vector n2, Vector n3) : base(p1, p2, p3)
+        public SmoothTriangle(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 n1, Vector3 n2, Vector3 n3)
         {
+            P1 = p1;
+            P2 = p2;
+            P3 = p3;
             N1 = n1;
             N2 = n2;
             N3 = n3;
         }
 
-        public override Vector LocalNormalAt(Point point, IntersectionWithUV hit = null)
+        /*public Vector NormalAt(Point point, IntersectionWithUV hit = null)
         {
             if (hit != null)
             {
@@ -27,24 +35,49 @@ namespace ObjRenderer.Shapes
             }
 
             return Normal;
+        }*/
+
+        public void Transform(Matrix4x4 matrix)
+        {
+            P1 = Vector3.Transform(P1, matrix);
+            P2 = Vector3.Transform(P2, matrix);
+            P3 = Vector3.Transform(P3, matrix);
         }
 
-        public override bool Equals(object obj)
+        public Intersection? Intersect(Ray r)
         {
-            if (obj is SmoothTriangle smoothTriangle)
+            var e1 = P2 - P1;
+            var e2 = P3 - P1;
+            var pvec = Vector3.Cross(r.Direction, e2);
+            var det = Vector3.Dot(e1, pvec);
+            if (det < 1e-8 && det > -1e-8)
             {
-                return base.Equals(smoothTriangle) &&
-                       N1.Equals(smoothTriangle.N1) &&
-                       N2.Equals(smoothTriangle.N2) &&
-                       N3.Equals(smoothTriangle.N3);
+                return null;
             }
 
-            return false;
-        }
+            var invDet = 1 / det;
+            var tvec = r.Origin - P1;
+            var u = Vector3.Dot(tvec, pvec) * invDet;
+            if (u < 0 || u > 1)
+            {
+                return null;
+            }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(P1, P2, P3, N1, N2, N3);
+            var qvec = Vector3.Cross(tvec, e1);
+            var v = Vector3.Dot(r.Direction, qvec) * invDet;
+            if (v < 0 || u + v > 1)
+            {
+                return null;
+            }
+
+            var f = Vector3.Dot(e2, qvec) * invDet;
+
+            return new Intersection()
+            {
+                P = r.Position(f),
+                Normal = Vector3.Cross(e2, e1),
+                T = f
+            };
         }
     }
 }

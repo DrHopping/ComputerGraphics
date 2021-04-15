@@ -1,41 +1,54 @@
 ﻿using System;
+using System.Drawing;
+using System.Numerics;
+using ObjRenderer.Interfaces;
 using ObjRenderer.Intersections;
 using ObjRenderer.Models;
-using ObjRenderer.Tuples;
 
 namespace ObjRenderer.Shapes
 {
-    public class Sphere : Shape
+    public class Sphere : ITraceable, ITransformable
     {
-        public override IntersectionCollection LocalIntersect(Ray ray)
-        {
-            var sphereToRay = ray.Origin - Point.Origin;
+        public float Radius { get; set; }
+        public Vector3 Center { get; set; }
 
-            var a = ray.Direction * ray.Direction;
-            var b = 2 * ray.Direction * sphereToRay;
-            var c = sphereToRay * sphereToRay - 1;
+        public Sphere(float radius, Vector3 center)
+        {
+            Radius = radius;
+            Center = center;
+        }
+
+        public Intersection? Intersect(Ray r)
+        {
+            var sphereToRay = r.Origin - Center;
+
+            var a = Vector3.Dot(r.Direction, r.Direction);
+            var b = 2 * Vector3.Dot(r.Direction, sphereToRay);
+            var c = Vector3.Dot(sphereToRay, sphereToRay) - Radius * Radius;
 
             var discriminant = b * b - 4 * a * c;
 
             if (discriminant < 0)
             {
-                return new IntersectionCollection();
+                return null;
             }
 
             var t1 = (-b - MathF.Sqrt(discriminant)) / (2 * a);
             var t2 = (-b + MathF.Sqrt(discriminant)) / (2 * a);
+            var point = r.Position(MathF.Min(t1, t2));
 
-            var i1 = new Intersection(t1, this, ray.Position(t1));
-            var i2 = new Intersection(t2, this, ray.Position(t2));
 
-            return new IntersectionCollection(i1, i2);
+            return new Intersection()
+            {
+                P = point,
+                Normal = point - Center,
+                T = MathF.Min(t1, t2)
+            };
         }
 
-        public override Vector LocalNormalAt(Point point, IntersectionWithUV hit = null)
+        public void Transform(Matrix4x4 matrix)
         {
-            var localNormal = point - Point.Origin;
-
-            return localNormal;
+            throw new NotImplementedException();
         }
     }
 }

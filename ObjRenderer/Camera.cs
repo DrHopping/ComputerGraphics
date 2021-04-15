@@ -1,31 +1,40 @@
 ﻿using System;
+using System.Numerics;
 using ObjRenderer.Interfaces;
 using ObjRenderer.Matrices;
 using ObjRenderer.Models;
-using ObjRenderer.Tuples;
 
 namespace ObjRenderer
 {
-    public class Camera : ITransformable
+    public class Camera 
     {
-        public Matrix Transform { get; set; }
-        public int HorizontalSize { get; }
-        public int VerticalSize { get; }
-        public float FieldOfView { get; }
+        public float Angle { get; set; }
+        public int Width  { get; set; }
+        public int Height { get; set; }
+        public Vector3 Direction { get; set; }
+        public Vector3 Origin { get; set; }
+        public Matrix4x4 Transform { get; set; }
         public float PixelSize { get; }
         public float HalfWidth { get; }
         public float HalfHeight { get; set; }
+        public float FieldOfView { get; }
+
+
+
+        private static readonly float _angle = 0;
+        private readonly float _cos = MathF.Cos(_angle);
+        private readonly float _sin = MathF.Sin(_angle);
 
         public Camera(int horizontalSize, int verticalSize, float fieldOfView)
         {
-            HorizontalSize = horizontalSize;
-            VerticalSize = verticalSize;
+            Width = horizontalSize;
+            Height = verticalSize;
             FieldOfView = fieldOfView;
 
             Transform = Matrix.Identity;
 
             var halfView = MathF.Tan(fieldOfView / 2);
-            var aspect = (float) horizontalSize / verticalSize;
+            var aspect = (float)horizontalSize / verticalSize;
 
             if (aspect >= 1)
             {
@@ -39,6 +48,27 @@ namespace ObjRenderer
             }
 
             PixelSize = HalfWidth * 2 / horizontalSize;
+        }
+        public Ray GetRay(int x, int y)
+        {
+            var scale = MathF.Tan(Angle * MathF.PI / 2 / 180);
+            var aspectRatio = Width / Height;
+            var px = (2 * (x + .5f) / Width - 1.0f) * scale * aspectRatio;
+            var py = (1 - 2 * (y + .5f) / Height) * scale;
+            var direction = Direction + new Vector3(px, py, 0) - Origin;
+            var translationMatrix = Matrix4x4.Transpose(new Matrix4x4(
+                1, 0, 0, 0,
+                0, 1, 0, 400,
+                0, 0, 1, -1000,
+                0, 0, 0, 1));
+            var rotationMatrix = Matrix4x4.Transpose(new Matrix4x4(
+                1, 0, 0, 0,
+                0, _cos, -_sin, 0,
+                0, _sin, _cos, 0,
+                0, 0, 0, 1));
+            var transformedOrigin = Vector3.Transform(Origin, translationMatrix);
+            var ray = new Ray(transformedOrigin, Vector3.Normalize(Vector3.Transform(direction, rotationMatrix)));
+            return ray;
         }
 
         public Ray RayForPixel(int px, int py)
@@ -55,12 +85,14 @@ namespace ObjRenderer
             // Using the camera matrix, transform the canvas point and the origin,
             // and then compute the ray's director vector.
             // (Remember that the canvas is at z = -1)
-            var inverseTransform = Transform.Inverse();
-            var pixel = (Point) (inverseTransform * new Point(worldX, worldY, -1));
-            var origin = (Point) (inverseTransform * new Point(0, 0, 0));
-            var direction = (pixel - origin).Normalize();
+            Matrix4x4.Invert(Transform, out var inverseTransform);
+            var pixel = Vector3.Transform(new Vector3(worldX, worldY, -1), inverseTransform);
+            var origin = Vector3.Transform(new Vector3(0, 0, 0), inverseTransform);
+            var direction = Vector3.Normalize(pixel - origin);
 
             return new Ray(origin, direction);
         }
+
+
     }
 }

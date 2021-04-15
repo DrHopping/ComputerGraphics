@@ -1,10 +1,11 @@
-﻿using ObjRenderer.Intersections;
+﻿using System.Numerics;
+using ObjRenderer.Intersections;
 using ObjRenderer.Models;
 
 namespace ObjRenderer.Interfaces
 {
     public interface ITraceable
     {
-        IntersectionCollection Intersect(Ray r);
+        Intersection? Intersect(Ray r);
     }
 }

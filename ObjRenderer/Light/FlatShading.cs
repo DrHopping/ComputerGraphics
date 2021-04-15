@@ -1,4 +1,5 @@
-﻿using ObjRenderer.Image;
+﻿using System.Numerics;
+using ObjRenderer.Image;
 using ObjRenderer.Intersections;
 
 namespace ObjRenderer.Light
@@ -7,10 +8,9 @@ namespace ObjRenderer.Light
     {
         public Color Illuminate(PointLight light, Intersection intersection)
         {
-            var lightDir = (light.Position - intersection.P).Normalize();
-            var color = intersection.Object.NormalAt(intersection.P) * lightDir;
-            color += .2f;
-            color = 1;
+            var lightDir = Vector3.Normalize(light.Position - intersection.P);
+            var color = Vector3.Dot(intersection.Normal, lightDir);
+            color += .25f;
             return new Color(color, color, color);
         }
     }

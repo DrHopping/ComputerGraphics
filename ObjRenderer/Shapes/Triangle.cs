@@ -1,88 +1,67 @@
 ﻿using System;
+using System.Numerics;
 using ObjRenderer.Extensions;
+using ObjRenderer.Interfaces;
 using ObjRenderer.Intersections;
 using ObjRenderer.Models;
-using ObjRenderer.Tuples;
 
 namespace ObjRenderer.Shapes
 {
-    public class Triangle : Shape
+    public class Triangle : ITraceable, ITransformable
     {
-        public Point P1 { get; }
-        public Point P2 { get; }
-        public Point P3 { get; }
+        public Vector3 P1 { get; private set; }
+        public Vector3 P2 { get; private set; }
+        public Vector3 P3 { get; private set; }
 
-        public Vector E1 { get; }
-        public Vector E2 { get; }
-
-        public Vector Normal { get; }
-
-        public Triangle(Point p1, Point p2, Point p3)
+        public Triangle(Vector3 p1, Vector3 p2, Vector3 p3)
         {
             P1 = p1;
             P2 = p2;
             P3 = p3;
-
-            E1 = p2 - p1;
-            E2 = p3 - p1;
-
-            Normal = E2.Cross(E1).Normalize();
         }
 
-        public override IntersectionCollection LocalIntersect(Ray ray)
+        public void Transform(Matrix4x4 matrix)
         {
-            var directionCrossE2 = ray.Direction.Cross(E2);
-            var determinant = E1 * directionCrossE2;
+            P1 = Vector3.Transform(P1, matrix);
+            P2 = Vector3.Transform(P2, matrix);
+            P3 = Vector3.Transform(P3, matrix);
+        }
 
-            if (Math.Abs(determinant) < FloatExtensions.Epsilon)
+        public Intersection? Intersect(Ray r)
+        {
+            var e1 = P2 - P1;
+            var e2 = P3 - P1;
+            var pvec = Vector3.Cross(r.Direction, e2);
+            var det = Vector3.Dot(e1, pvec);
+            if (det < 1e-8 && det > -1e-8)
             {
-                return new IntersectionCollection();
+                return null;
             }
 
-            var f = 1.0f / determinant;
-
-            var p1ToOrigin = ray.Origin - P1;
-            var u = f * p1ToOrigin * directionCrossE2;
-
+            var invDet = 1 / det;
+            var tvec = r.Origin - P1;
+            var u = Vector3.Dot(tvec, pvec) * invDet;
             if (u < 0 || u > 1)
             {
-                return new IntersectionCollection();
+                return null;
             }
 
-            var originCrossE1 = p1ToOrigin.Cross(E1);
-            var v = f * ray.Direction * originCrossE1;
-
-            if (v < 0 || (u + v) > 1)
+            var qvec = Vector3.Cross(tvec, e1);
+            var v = Vector3.Dot(r.Direction, qvec) * invDet;
+            if (v < 0 || u + v > 1)
             {
-                return new IntersectionCollection();
+                return null;
             }
 
-            var t = f * E2 * originCrossE1;
+            var f = Vector3.Dot(e2, qvec) * invDet;
 
-            return new IntersectionCollection(new IntersectionWithUV(t, this, u, v, ray.Position(t)));
-        }
-
-        public override Vector LocalNormalAt(Point point, IntersectionWithUV hit = null)
-        {
-            return Normal;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is Triangle triangle)
+            return new Intersection()
             {
-                return base.Equals(obj) || (
-                       P1.Equals(triangle.P1) &&
-                       P2.Equals(triangle.P2) &&
-                       P3.Equals(triangle.P3));
-            }
-
-            return false;
+                P = r.Position(f),
+                Normal = Vector3.Cross(e2, e1),
+                T = f
+            };
         }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(P1, P2, P3);
-        }
     }
 }

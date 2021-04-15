@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using ObjRenderer.Image;
 using ObjRenderer.Interfaces;
+using ObjRenderer.Intersections;
 using ObjRenderer.Light;
 
 namespace ObjRenderer
@@ -16,8 +17,8 @@ namespace ObjRenderer
 
         public Canvas Render(Scene scene)
         {
-            int width = scene.Camera.HorizontalSize;
-            int height = scene.Camera.VerticalSize;
+            int width = scene.Camera.Width;
+            int height = scene.Camera.Height;
             var image = new Canvas(width, height);
 
             Parallel.ForEach(scene.Objects, @object =>
@@ -27,11 +28,11 @@ namespace ObjRenderer
                     Parallel.For(0, height, j =>
                     {
                         var ray = scene.Camera.RayForPixel(i, j);
-                        var intersectionCollection = @object.Intersect(ray);
+                        var intersection = @object.Intersect(ray);
 
-                        if (intersectionCollection.Length > 0)
+                        if (intersection != null)
                         {
-                            image[i, j] = _illuminationStrategy.Illuminate(scene.Light, intersectionCollection.Hit);
+                            image[i, j] = _illuminationStrategy.Illuminate(scene.Light, (Intersection) intersection);
                         }
                     });
                 });
