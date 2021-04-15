@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CG.DependencyInjection;
 using CG.RayTracer.Core.Interfaces;
 using CG.RayTracer.Core.Light;
+using CommandLine;
 
 namespace CG.RayTracer.ConsoleApp
 {
@@ -23,7 +24,18 @@ namespace CG.RayTracer.ConsoleApp
             var container = services.GenerateContainer();
             var app = container.GetService<IApp>();
 
-            await app.Run("cow.obj", "output.ppm");
+            await Parser.Default.ParseArguments<CommandLineArgs>(args)
+                .WithParsedAsync(async arguments =>
+                {
+                    try
+                    {
+                        await app.Run(arguments.FileName, arguments.Output);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                });
         }
     }
 }

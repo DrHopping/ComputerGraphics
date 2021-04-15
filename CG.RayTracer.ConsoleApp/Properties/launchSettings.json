@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CG.RayTracer.ConsoleApp": {
+      "commandName": "Project",
+      "commandLineArgs": "-s cow.obj -o output.ppm"
+    }
+  }
+}
