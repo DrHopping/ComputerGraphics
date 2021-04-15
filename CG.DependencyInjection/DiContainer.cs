@@ -4,12 +4,6 @@ using System.Linq;
 
 namespace CG.DependencyInjection
 {
-    public enum ServiceLifetime
-    {
-        Singleton,
-        Transient
-    }
-
     public class DiContainer
     {
         private readonly List<ServiceDescriptor> _serviceDescriptors;

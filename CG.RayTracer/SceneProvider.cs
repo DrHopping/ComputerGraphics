@@ -1,4 +1,5 @@
-﻿using CG.RayTracer.Core.Interfaces;
+﻿using System.Collections.Generic;
+using CG.RayTracer.Core.Interfaces;
 using CG.RayTracer.Core.Models;
 
 namespace CG.RayTracer
@@ -19,7 +20,8 @@ namespace CG.RayTracer
             return new Scene()
             {
                 Camera = _cameraProvider.GetCamera(),
-                Light = _lightProvider.GetLight()
+                Light = _lightProvider.GetLight(),
+                Objects = new List<ITraceable>()
             };
         }
     }
