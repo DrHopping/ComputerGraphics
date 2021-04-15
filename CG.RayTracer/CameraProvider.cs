@@ -16,7 +16,7 @@ namespace CG.RayTracer
 
         public Camera GetCamera()
         {
-            return new Camera(1000, 1000, MathF.PI / 3, _rayProvider)
+            return new Camera(300, 300, MathF.PI / 3, _rayProvider)
             {
                 Direction = Vector3.UnitZ,
                 Origin = Vector3.Zero,
