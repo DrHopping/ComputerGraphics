@@ -22,10 +22,10 @@ namespace ObjRenderer
         {
             Objects = new List<ITraceable>();
             Light = new PointLight(new Vector3(5,5,7));
-            Camera = new Camera(1000, 1000, MathF.PI / 3)
+            Camera = new Camera(500, 500, MathF.PI / 3)
             {
-                Width = 1000,
-                Height = 1000,
+                Width = 500,
+                Height = 500,
                 Angle = 60,
                 Direction = Vector3.UnitZ,
                 Origin = Vector3.Zero

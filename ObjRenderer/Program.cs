@@ -46,7 +46,7 @@ namespace ObjRenderer
 
 
             var cow = new ObjParser(File.ReadAllText("cow.obj")).ToGroup().ToMesh();
-            cow.Transform(Matrix.RotationX(MathF.PI / 2).RotateZ(MathF.PI / 8).Scale(5, 5, 5));
+            cow.Transform(Matrix.RotationX(MathF.PI / 2).Scale(5, 5, 5));
             //cow.Transform = Matrix.Scaling(2, 2, 2) * Matrix.RotationX( -MathF.PI/ 2);
 
             //var diamond = new ObjParser(File.ReadAllText("diamond.obj")).ToGroup();
@@ -83,7 +83,6 @@ namespace ObjRenderer
             var image = tracer.Render(scene);
             var sr = new StreamWriter("output.ppm");
             await image.ToPpmAsync(sr.BaseStream);
-            int a = 1;
         }
     }
 }
