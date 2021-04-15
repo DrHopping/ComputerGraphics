@@ -48,7 +48,7 @@ namespace ObjRenderer.Shapes
 
         public void Transform(Matrix4x4 matrix)
         {
-            throw new NotImplementedException();
+            Center = Vector3.Transform(Center, matrix);
         }
     }
 }

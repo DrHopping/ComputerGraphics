@@ -9,6 +9,42 @@ namespace ObjRenderer.Shapes
 {
     public class Triangle : ITraceable, ITransformable
     {
+        #region Box info for KdTree
+
+        private Vector3 _boxMax;
+        private Vector3 _boxMin;
+
+        public Vector3 BoxMax
+        {
+            get
+            {
+                if (_boxMax != Vector3.Zero) return _boxMax;
+
+                var maxX = Math.Max(this.P1.X, Math.Max(this.P2.X, this.P3.X));
+                var maxY = Math.Max(this.P1.Y, Math.Max(this.P2.Y, this.P3.Y));
+                var maxZ = Math.Max(this.P1.Z, Math.Max(this.P2.Z, this.P3.Z));
+
+                _boxMax = new Vector3(maxX, maxY, maxZ);
+                return _boxMax;
+            }
+        }
+
+        public Vector3 BoxMin
+        {
+            get
+            {
+                if (_boxMin != Vector3.Zero) return _boxMin;
+
+                var minX = Math.Min(this.P1.X, Math.Min(this.P2.X, this.P3.X));
+                var minY = Math.Min(this.P1.Y, Math.Min(this.P2.Y, this.P3.Y));
+                var minZ = Math.Min(this.P1.Z, Math.Min(this.P2.Z, this.P3.Z));
+
+                _boxMin = new Vector3(minX, minY, minZ);
+                return _boxMin;
+            }
+        }
+        #endregion
+
         public Vector3 P1 { get; private set; }
         public Vector3 P2 { get; private set; }
         public Vector3 P3 { get; private set; }

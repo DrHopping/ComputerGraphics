@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using ObjRenderer.Interfaces;
 using ObjRenderer.Intersections;
+using ObjRenderer.KDTree;
 using ObjRenderer.Matrices;
 using ObjRenderer.Shapes;
 
@@ -11,12 +12,13 @@ namespace ObjRenderer.Models
 {
     public class Mesh : ITraceable, ITransformable
     {
-        private readonly IEnumerable<Triangle> _triangles;
+        private IEnumerable<Triangle> _triangles;
+        private KdTree _tree;
 
         public Mesh(IEnumerable<Triangle> triangles)
         {
             _triangles = triangles;
-            //ResetToDefault();
+            _tree = new KdTree(_triangles.ToArray());
         }
 
         public void Transform(Matrix4x4 matrix4X4)
@@ -29,6 +31,7 @@ namespace ObjRenderer.Models
 
         public Intersection? Intersect(Ray r)
         {
+            //return _tree.Traverse(r);
             Intersection? hitResult = null;
             foreach (var triangle in _triangles)
             {
@@ -49,25 +52,6 @@ namespace ObjRenderer.Models
             }
 
             return hitResult;
-        }
-
-        private void ResetToDefault()
-        {
-            var xs = _triangles.Select(_ => new[] { _.P1.X, _.P2.X, _.P3.X })
-                .SelectMany(_ => _);
-            var ys = _triangles.Select(_ => new[] { _.P1.Y, _.P2.Y, _.P3.Y })
-                .SelectMany(_ => _);
-            var zs = _triangles.Select(_ => new[] { _.P1.X, _.P2.X, _.P3.X })
-                .SelectMany(_ => _);
-            var averageX = xs.Average();
-            var averageY = ys.Average();
-            var averageZ = zs.Average();
-            var maxX = xs.Select(Math.Abs).Max();
-            var maxY = ys.Select(Math.Abs).Max();
-            var maxZ = zs.Select(Math.Abs).Max();
-            var maxValue = new[] { maxX, maxY, maxZ }.Max();
-            var scale = 10 / maxValue;
-            Transform(Matrix4x4.Identity.Translate(-averageX, -averageY, -averageZ).Scale(scale,scale,scale));
         }
     }
 }
